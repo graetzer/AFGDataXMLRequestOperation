@@ -4,7 +4,7 @@ AFGDataXMLRequestOperation is an extension for [AFNetworking](http://github.com/
 Only the original parts of GDataXMl are used not the HTML additions. 
 This is still in early stages of development, so proceed with caution when using this in a production application. Any bug reports, feature requests, or general feedback at this point would be greatly appreciated.
 
-## Example Usage
+### Example Usage
 
 ``` objective-c
 AFGDataXMLRequestOperation *operation = [AFGDataXMLRequestOperation XMLDocumentRequestOperationWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://legalindexes.indoff.com/sitemap.xml"]] success:^(NSURLRequest *request, NSHTTPURLResponse *response, GDataXMLDocument *XMLDocument) {
@@ -19,9 +19,9 @@ NSOperationQueue *queue = [[[NSOperationQueue alloc] init] autorelease];
 [queue addOperation:operation];
 ```
 
-## ARC
-### Neither AFNetworking or GDataXML support ARC at the moment
-### If your code is using Automatic Reference Counting (ARC) do the following:
+### ARC
+#### Neither AFNetworking or GDataXML support ARC at the moment
+#### If your code is using Automatic Reference Counting (ARC) do the following:
 
 1. Select Build Phases tab.
 
@@ -31,17 +31,15 @@ NSOperationQueue *queue = [[[NSOperationQueue alloc] init] autorelease];
 
 4. On the small input box that pops-out, enter -fno-objc-arc.
 
-# Contact
+## Contact
 
 Simon Grätzer
-
-- http://github.com/graetzer
 - http://twitter.com/ciron
 - simon@graetzer.org
 
-# Credits
+## Credits
 This Code is basically a slight modification of Mattt Thompson's AFKissXMLRequestOperation (https://github.com/AFNetworking/AFKissXMLRequestOperation)
 
-# License
+## License
 
 AFGDataXMLRequestOperation is available under the MIT license. See the LICENSE file for more info.
