@@ -104,6 +104,8 @@ static dispatch_queue_t gdataxml_request_operation_processing_queue() {
     if (!_responseXMLDocument && [self isFinished]) {
         NSError *error = nil;
         self.responseXMLDocument = [[GDataXMLDocument alloc] initWithData:self.responseData options:0 error:&error];
+        //For parsing malformed XML input:
+        //self.responseXMLDocument = [[GDataXMLDocument alloc] initWithHTMLData:self.responseData options:0 error:&error];
         self.error = error;
     }
     

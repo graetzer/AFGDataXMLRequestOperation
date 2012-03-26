@@ -1,7 +1,8 @@
 # AFGDataXMLRequestOperation
 
-AFGDataXMLRequestOperation is an extension for [AFNetworking](http://github.com/AFNetworking/AFNetworking/) that provides an interface to parse XML using [GDataXML](https://github.com/graetzer/GDataXML-HTML)
-Only the original parts of GDataXMl are used not the HTML additions. 
+AFGDataXMLRequestOperation is an extension for [AFNetworking](http://github.com/AFNetworking/AFNetworking/) that provides an interface to parse XML using [GDataXML-HTML](https://github.com/graetzer/GDataXML-HTML).
+To use this code you have to manually add GDataXML and AFNetworking to your Project
+
 This is still in early stages of development, so proceed with caution when using this in a production application. Any bug reports, feature requests, or general feedback at this point would be greatly appreciated.
 
 ### Example Usage
@@ -19,7 +20,7 @@ NSOperationQueue *queue = [[[NSOperationQueue alloc] init] autorelease];
 [queue addOperation:operation];
 ```
 
-### ARC
+## ARC
 #### Neither AFNetworking or GDataXML support ARC at the moment
 #### If your code is using Automatic Reference Counting (ARC) do the following:
 
@@ -34,6 +35,7 @@ NSOperationQueue *queue = [[[NSOperationQueue alloc] init] autorelease];
 ## Contact
 
 Simon Grätzer
+
 - http://twitter.com/ciron
 - simon@graetzer.org
 
