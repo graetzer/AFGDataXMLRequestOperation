@@ -26,14 +26,47 @@
 
 #import "GDataXMLNode.h"
 
+/**
+ `AFGDataXMLRequestOperation` is a subclass of `AFHTTPRequestOperation` for downloading and working with XML response data using GDataXML.
+ 
+ ## Acceptable Content Types
+ 
+ By default, `AFGDataXMLRequestOperation` accepts the following MIME types, which includes the official standard, `application/xml`, as well as other commonly-used types:
+ 
+ - `text/xml`
+ - `text/html
+ - `application/xhtml+xml`
+ 
+ @warning `AFGDataXMLRequestOperation` requires GDataXML to also be added to the project. Please consult the GDataXML documentation for details on how to add that library to your project.
+ */
 @interface AFGDataXMLRequestOperation : AFHTTPRequestOperation {
 @private
     GDataXMLDocument *_XMLDocument;
     NSError *_XMLError;
 }
 
+///----------------------------
+/// @name Getting Response Data
+///----------------------------
+
+/**
+ A XML object constructed from the response data. If an error occurs while parsing, `nil` will be returned, and the `error` property will be set to the error.
+ */
 @property (readonly, nonatomic, retain) GDataXMLDocument *responseXMLDocument;
 
+///----------------------------------
+/// @name Creating Request Operations
+///----------------------------------
+
+/**
+ Creates and returns an `AFGDataXMLRequestOperation` object and sets the specified success and failure callbacks.
+ 
+ @param urlRequest The request object to be loaded asynchronously during execution of the operation
+ @param success A block object to be executed when the operation finishes successfully. This block has no return value and takes three arguments: the request sent from the client, the response received from the server, and the XML object created from the response data of request.
+ @param failure A block object to be executed when the operation finishes unsuccessfully, or that finishes successfully, but encountered an error while parsing the resonse data as XML. This block has no return value and takes three arguments: the request sent from the client, the response received from the server, and the error describing the network or parsing error that occurred.
+ 
+ @return A new XML request operation
+ */
 + (AFGDataXMLRequestOperation *)XMLDocumentRequestOperationWithRequest:(NSURLRequest *)urlRequest
                                                               success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, GDataXMLDocument *XMLDocument))success
                                                               failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, GDataXMLDocument *XMLDocument))failure;
