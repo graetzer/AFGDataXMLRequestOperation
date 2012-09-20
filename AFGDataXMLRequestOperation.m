@@ -34,64 +34,31 @@ static dispatch_queue_t gdataxml_request_operation_processing_queue() {
 
 @interface AFGDataXMLRequestOperation ()
 @property (readwrite, nonatomic, retain) GDataXMLDocument *responseXMLDocument;
-@property (readwrite, nonatomic, retain) NSError *error;
+@property (readwrite, nonatomic, retain) NSError *XMLError;
 
-+ (NSSet *)defaultAcceptableContentTypes;
-+ (NSSet *)defaultAcceptablePathExtensions;
 @end
 
 @implementation AFGDataXMLRequestOperation
 @synthesize responseXMLDocument = _responseXMLDocument;
-@synthesize error = _XMLError;
+@synthesize XMLError = _XMLError;
 
 + (AFGDataXMLRequestOperation *)XMLDocumentRequestOperationWithRequest:(NSURLRequest *)urlRequest 
                                                               success:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, GDataXMLDocument *XMLDocument))success 
                                                               failure:(void (^)(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error, GDataXMLDocument *XMLDocument))failure
 {
-    AFGDataXMLRequestOperation *operation = [[[self alloc] initWithRequest:urlRequest] autorelease];
-    operation.completionBlock = ^ {
-        if ([operation isCancelled]) {
-            return;
+    AFGDataXMLRequestOperation *requestOperation = [[[self alloc] initWithRequest:urlRequest] autorelease];
+    
+    [requestOperation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        if (success) {
+            success(operation.request, operation.response, responseObject);
         }
-        
-        if (operation.error) {
-            if (failure) {
-                dispatch_async(dispatch_get_main_queue(), ^(void) {
-                    failure(operation.request, operation.response, operation.error, [(AFGDataXMLRequestOperation *)operation responseXMLDocument]);
-                });
-            }
-        } else {
-            dispatch_async(gdataxml_request_operation_processing_queue(), ^(void) {
-                GDataXMLDocument *XMLDocument = operation.responseXMLDocument;
-                if (success) {
-                    dispatch_async(dispatch_get_main_queue(), ^(void) {
-                        success(operation.request, operation.response, XMLDocument);
-                    });
-                }
-            });
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        if (failure) {
+            failure(operation.request, operation.response, operation.error, [(AFGDataXMLRequestOperation *)operation responseXMLDocument]);
         }
-    };
+    }];
     
-    return operation;
-}
-
-+ (NSSet *)defaultAcceptableContentTypes {
-    return [NSSet setWithObjects:@"application/xml", @"text/xml", @"text/html", @"application/xhtml+xml", nil];
-}
-
-+ (NSSet *)defaultAcceptablePathExtensions {
-    return [NSSet setWithObjects:@"xml", @"html", nil];
-}
-
-- (id)initWithRequest:(NSURLRequest *)urlRequest {
-    self = [super initWithRequest:urlRequest];
-    if (!self) {
-        return nil;
-    }
-    
-    self.acceptableContentTypes = [[self class] defaultAcceptableContentTypes];
-    
-    return self;
+    return requestOperation;
 }
 
 - (void)dealloc {
@@ -101,12 +68,10 @@ static dispatch_queue_t gdataxml_request_operation_processing_queue() {
 }
 
 - (GDataXMLDocument *)responseXMLDocument {
-    if (!_responseXMLDocument && [self isFinished]) {
+    if (!_responseXMLDocument && [self isFinished] && [self.responseData length] > 0) {
         NSError *error = nil;
-        self.responseXMLDocument = [[GDataXMLDocument alloc] initWithData:self.responseData options:0 error:&error];
-        //For parsing malformed XML input:
-        //self.responseXMLDocument = [[GDataXMLDocument alloc] initWithHTMLData:self.responseData options:0 error:&error];
-        self.error = error;
+        self.responseXMLDocument = [[[GDataXMLDocument alloc] initWithData:self.responseData options:0 error:&error] autorelease];
+        self.XMLError = error;
     }
     
     return _responseXMLDocument;
@@ -120,10 +85,14 @@ static dispatch_queue_t gdataxml_request_operation_processing_queue() {
     }
 }
 
-#pragma mark - NSOperation
+#pragma mark - AFHTTPRequestOperation
+
++ (NSSet *)acceptableContentTypes {
+    return [NSSet setWithObjects:@"application/xml", @"text/xml", @"text/html", @"application/xhtml+xml", nil];
+}
 
 + (BOOL)canProcessRequest:(NSURLRequest *)request {
-    return [[self defaultAcceptableContentTypes] containsObject:[request valueForHTTPHeaderField:@"Accept"]] || [[self defaultAcceptablePathExtensions] containsObject:[[request URL] pathExtension]];
+    return [[[request URL] pathExtension] isEqualToString:@"xml"] || [[[request URL] pathExtension] isEqualToString:@"html"] || [super canProcessRequest:request];
 }
 
 - (void)setCompletionBlockWithSuccess:(void (^)(AFHTTPRequestOperation *operation, id responseObject))success
@@ -136,16 +105,31 @@ static dispatch_queue_t gdataxml_request_operation_processing_queue() {
         
         if (self.error) {
             if (failure) {
-                dispatch_async(dispatch_get_main_queue(), ^(void) {
+                dispatch_async(self.failureCallbackQueue ? self.failureCallbackQueue : dispatch_get_main_queue(), ^(void) {
                     failure(self, self.error);
                 });
             }
         } else {
-            if (success) {
-                success(self, self.responseXMLDocument);
-            }
+            dispatch_async(gdataxml_request_operation_processing_queue(), ^{
+                GDataXMLDocument *XMLDocument = self.responseXMLDocument;
+                
+                if(self.XMLError){
+                    if (failure) {
+                        dispatch_async( self.failureCallbackQueue ? self.failureCallbackQueue : dispatch_get_main_queue(), ^{
+                            failure(self, self.XMLError);
+                        });
+                    }
+                }
+                else{
+                    if (success) {
+                        dispatch_async( self.successCallbackQueue ? self.successCallbackQueue : dispatch_get_main_queue(), ^{
+                            success(self, XMLDocument);
+                        });
+                    }
+                }
+            });
         }
-    };    
+    };
 }
 
 @end
